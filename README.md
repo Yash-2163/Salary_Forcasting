@@ -98,11 +98,21 @@ Flask API to serve predictions via JSON.
  
 ### ⚙️ Workflow Orchestration
 Airflow DAG automating retraining and reporting.
+![image](https://github.com/user-attachments/assets/32465692-60cf-421d-8c67-a0662616c441)
+
  
 ---
  
-## 🚀 Getting Started
- 
-### Install Dependencies
+### Running the Project
+
+Use Docker Compose to build and run all services (backend, frontend, airflow, drift check) in one command:
+
 ```bash
-pip install -r requirements.txt
+docker-compose up --build
+
+```
+
+👤 Author
+Yash Rajput
+
+
