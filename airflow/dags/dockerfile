@@ -1,0 +1,25 @@
+FROM apache/airflow:2.9.1-python3.9
+
+USER root
+
+# Install any OS dependencies, if needed
+RUN apt-get update && apt-get install -y \
+    python3-pip \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+USER airflow
+
+# Copy your dags, model_training, and data folders into container
+COPY dags/ /opt/airflow/dags/
+COPY ../model_training/ /opt/airflow/model_training/
+COPY ../data/ /opt/airflow/data/
+COPY ../model/ /opt/airflow/model/
+
+# Install Python dependencies needed for your training script
+COPY ../requirements.txt /tmp/requirements.txt
+RUN pip install --no-cache-dir -r /tmp/requirements.txt
+
+# Set the entrypoint and cmd as default for airflow
+ENTRYPOINT ["/entrypoint"]
+CMD ["webserver"]

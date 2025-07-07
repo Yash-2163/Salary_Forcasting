@@ -1,0 +1,58 @@
+version: "3.8"
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: salary-backend
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./model:/app/model # mount model folder here
+      - ./data:/app/data
+      - ./model_training:/app/model_training
+    environment:
+      - FLASK_ENV=development
+    command: flask run --host=0.0.0.0 --port=5000
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: salary-frontend
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./frontend:/app
+    environment:
+      - STREAMLIT_SERVER_PORT=8501
+    command: streamlit run app.py --server.port 8501 --server.address 0.0.0.0
+
+  airflow:
+    image: apache/airflow:2.9.1
+    container_name: airflow
+    restart: always
+    depends_on:
+      - backend
+    ports:
+      - "8080:8080"
+    environment:
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+      AIRFLOW__CORE__DAGS_FOLDER: /opt/airflow/dags
+      AIRFLOW__CORE__EXECUTOR: SequentialExecutor
+      AIRFLOW__CORE__FERNET_KEY: "YOUR_FERNET_KEY_HERE" # generate securely if needed
+      AIRFLOW__CORE__SQL_ALCHEMY_CONN: sqlite:////opt/airflow/airflow.db
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./model_training:/opt/airflow/model_training
+      - ./data:/opt/airflow/data
+      - ./backend/model:/opt/airflow/model
+    command: >
+      bash -c "airflow db init &&
+               airflow scheduler & 
+               airflow webserver"
+
+networks:
+  default:
+    driver: bridge
